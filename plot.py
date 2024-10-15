@@ -13,13 +13,14 @@ def plot_sports_stats(data, parameter, projection, quantitative):
         print(f"Parameter {parameter} not found in header.")
         return
 
-    # Extracting dates, the specified parameter's values, and team abbreviations
+    # Extracting dates, parameter values, team abbreviations, and opponent names
     dates = [datetime.strptime(game[header.index('DATE')], '%m/%d/%Y') for game in data[1:] if game[header.index('DATE')]]
     values = [float(game[index_to_extract]) for game in data[1:] if game[index_to_extract]]
     team_abbrs = [game[header.index('TM')] for game in data[1:] if game[header.index('TM')]]
+    opponent_names = [game[header.index('OPP')] for game in data[1:] if game[header.index('OPP')]]
 
-    # Sorting dates, values, and team abbreviations based on dates
-    sorted_dates, sorted_values, sorted_team_abbrs = zip(*sorted(zip(dates, values, team_abbrs)))
+    # Sorting dates, values, team abbreviations, and opponent names based on dates
+    sorted_dates, sorted_values, sorted_team_abbrs, sorted_opponent_names = zip(*sorted(zip(dates, values, team_abbrs, opponent_names)))
 
     x_values = list(range(len(sorted_dates)))
 
@@ -43,7 +44,8 @@ def plot_sports_stats(data, parameter, projection, quantitative):
 
     for i, bar in enumerate(bars):
         yval = bar.get_height()
-        ax1.text(bar.get_x() + bar.get_width() / 2, yval, f'{yval:.2f}', ha='center', va='bottom', fontsize=10, color='white')
+        # Modify text to include the opponent name
+        ax1.text(bar.get_x() + bar.get_width() / 2, yval, f'{yval:.2f}\nvs {sorted_opponent_names[i]}', ha='center', va='bottom', fontsize=10, color='white')
 
     # Statistical Analysis
     data = np.array(sorted_values)
@@ -102,4 +104,3 @@ def plot_sports_stats(data, parameter, projection, quantitative):
 
     plt.tight_layout(rect=[0, 0.14, 1, 0.97])  # Adjust layout to make space for the text box
     plt.show()
-
