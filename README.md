@@ -1,6 +1,6 @@
 # Quantitative-Bets
 
-Quantitative-Bets is a collection of small utilities for pulling and plotting player statistics from [StatMuse](https://www.statmuse.com/). The project focuses on quickly visualizing recent performances and running simple quantitative analysis (mean and weighted moving average) to aid sports betting decisions.
+Quantitative-Bets is a collection of small utilities for pulling and plotting player statistics from [StatMuse](https://www.statmuse.com/). The project focuses on quickly visualizing recent performances and running simple quantitative analysis (mean and weighted mean) to aid sports betting decisions.
 
 ## Running the GUI
 
