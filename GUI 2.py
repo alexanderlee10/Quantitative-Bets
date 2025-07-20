@@ -18,7 +18,7 @@ league_label = tk.Label(root, text="League:")
 league_label.grid(row=0, column=0)
 league_var = tk.StringVar(value="NBA")
 league_dropdown = ttk.Combobox(root, textvariable=league_var)
-league_dropdown['values'] = ('NBA', 'NFL', 'NHL', 'MLB')
+league_dropdown['values'] = ('NBA', 'NFL', 'NHL', 'WNBA', 'MLB')
 league_dropdown.grid(row=0, column=1)
 
 # Create a label and text input for the player name
@@ -119,7 +119,7 @@ def update_statistic_options(*args):
                 get_statistics = get_mlb_pitcher_statistics
             else:
                 get_statistics = get_mlb_hitter_statistics
-        elif league == 'NBA':
+        elif league == 'NBA' or league == 'WNBA':
             get_statistics = get_nba_statistics
         else:
             # Add logic for other leagues
@@ -169,7 +169,7 @@ def on_button_click():
         print("No data found.")
         return
 
-    if league == 'NBA':
+    if league == 'NBA' or 'WNBA':
         cleaned_data = clean_nba_data(data)
     elif league == 'NHL':
         position = position_var.get().lower()
