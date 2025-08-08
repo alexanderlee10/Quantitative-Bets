@@ -7,6 +7,12 @@ def get_team_defense_rankings(statistic):
     Scrapes team defensive rankings for a given statistic from StatMuse
     Returns a list of tuples: (team_name, value, rank)
     """
+    # Check if this is a combined statistic - if so, return empty list
+    # Combined stats should use get_combined_stats_rankings instead
+    if '+' in statistic or statistic.upper() in ['PRA', 'PR', 'PA', 'RA', 'PRA+', 'SHOOTING']:
+        print(f"WARNING: get_team_defense_rankings called for combined stat '{statistic}'. Use get_combined_stats_rankings instead.")
+        return []
+    
     # Map player stats to team defensive stats
     stat_mapping = {
         'PTS': 'points',
@@ -41,9 +47,42 @@ def get_team_defense_rankings(statistic):
         # Extract headers
         headers = [header.get_text(strip=True) for header in table.find_all('th')]
         
-        # Based on the debug output, team names are in column 2, defensive stats in column 3
+        # Based on the headers, team names are in column 2, defensive stats in column 3 (per-game) or 4 (total)
         team_name_col = 2  # TEAM column
-        def_stat_col = 3   # OPP PTS/GP column
+        
+        # Debug: print all headers to see what we have
+        print(f"Available headers: {headers}")
+        
+        # Based on our debug, we know the structure for all stats:
+        # Column 3: OPP [STAT]/GP (per-game stats like 121.23, 29.62, 48.88)
+        # Column 4: OPP [STAT] (total stats like 9,941, 2,429, 4,008)
+        # We want per-game stats, so use column 3
+        
+        # Map player stats to defensive stat column names
+        stat_column_map = {
+            'PTS': 'OPP PTS/GP',
+            'AST': 'OPP AST/GP', 
+            'REB': 'OPP REB/GP',
+            'STL': 'OPP STL/GP',
+            'BLK': 'OPP BLK/GP',
+            '3PM': 'OPP 3PM/GP',
+            'FTM': 'OPP FTM/GP',
+            'TOV': 'OPP TOV/GP',
+            'FGM': 'OPP FGM/GP',
+            'FGA': 'OPP FGA/GP',
+            '3PA': 'OPP 3PA/GP',
+            'FTA': 'OPP FTA/GP'
+        }
+        
+        # Find the correct per-game column
+        expected_per_game_col = stat_column_map.get(statistic, f'OPP {statistic}/GP')
+        if expected_per_game_col in headers:
+            def_stat_col = headers.index(expected_per_game_col)
+            print(f"Using per-game stats from column {def_stat_col} ({expected_per_game_col})")
+        else:
+            # Fallback to column 3 (which should always be the per-game column)
+            def_stat_col = 3
+            print(f"Using fallback column {def_stat_col} for {statistic}")
         
         # Extract rows
         rows = table.find_all('tr')[1:]  # Skip header row
@@ -68,9 +107,11 @@ def get_team_defense_rankings(statistic):
                 # Debug: print what we're extracting
                 print(f"Extracted team: '{team_name}', value: {value}")
                 
-                # Try to convert value to float, skip if not numeric
+                # Clean value by removing commas and converting to float
                 try:
-                    float_value = float(value)
+                    # Remove commas and any extra whitespace
+                    clean_value = value.replace(',', '').strip()
+                    float_value = float(clean_value)
                     if team_name and len(team_name) > 2:  # Only add if we have a meaningful team name
                         raw_rankings.append((team_name, float_value))
                 except ValueError:
@@ -147,9 +188,18 @@ def get_defense_analysis(player_data, statistic):
     opponent = player_data[1][opp_index]  # Most recent game
     print(f"Looking for opponent: '{opponent}'")
     
-    # Get team defense rankings
-    rankings = get_team_defense_rankings(statistic)
-    print(f"Found {len(rankings)} team rankings")
+    # Check if this is a combined statistic
+    if '+' in statistic:
+        # Use the corrected combined stats logic
+        from combined_stats_analyzer import get_combined_stats_rankings
+        components = [comp.strip() for comp in statistic.split('+')]
+        combined_rankings, detailed_data = get_combined_stats_rankings(components)
+        rankings = combined_rankings
+        print(f"Found {len(rankings)} team rankings for combined stats")
+    else:
+        # Get team defense rankings for individual stats
+        rankings = get_team_defense_rankings(statistic)
+        print(f"Found {len(rankings)} team rankings")
     
     # Find the opponent's ranking with improved matching
     opponent_rank = None
@@ -188,7 +238,18 @@ def get_defense_analysis(player_data, statistic):
         'IND': 'Pacers', 'PAC': 'Pacers'
     }
     
-    for team_name, value, rank in rankings:
+    for ranking_item in rankings:
+        # Handle different data formats
+        if len(ranking_item) == 3:
+            if isinstance(ranking_item[0], int):
+                # Format: (rank, team, value) - from combined stats
+                rank, team_name, value = ranking_item
+            else:
+                # Format: (team, value, rank) - from individual stats
+                team_name, value, rank = ranking_item
+        else:
+            continue
+            
         print(f"Checking '{team_name}' against '{opponent}'")
         
         # Check direct match

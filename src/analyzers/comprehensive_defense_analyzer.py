@@ -97,9 +97,39 @@ def get_team_defense_rankings_single_stat(statistic):
         # Extract headers
         headers = [header.get_text(strip=True) for header in table.find_all('th')]
         
-        # Based on the debug output, team names are in column 2, defensive stats in column 3
+        # Based on the headers, team names are in column 2, defensive stats in column 3 (per-game) or 4 (total)
         team_name_col = 2  # TEAM column
-        def_stat_col = 3   # OPP PTS/GP column
+        
+        # Based on our debug, we know the structure for all stats:
+        # Column 3: OPP [STAT]/GP (per-game stats like 121.23, 29.62, 48.88)
+        # Column 4: OPP [STAT] (total stats like 9,941, 2,429, 4,008)
+        # We want per-game stats, so use column 3
+        
+        # Map player stats to defensive stat column names
+        stat_column_map = {
+            'PTS': 'OPP PTS/GP',
+            'AST': 'OPP AST/GP', 
+            'REB': 'OPP REB/GP',
+            'STL': 'OPP STL/GP',
+            'BLK': 'OPP BLK/GP',
+            '3PM': 'OPP 3PM/GP',
+            'FTM': 'OPP FTM/GP',
+            'TOV': 'OPP TOV/GP',
+            'FGM': 'OPP FGM/GP',
+            'FGA': 'OPP FGA/GP',
+            '3PA': 'OPP 3PA/GP',
+            'FTA': 'OPP FTA/GP'
+        }
+        
+        # Find the correct per-game column
+        expected_per_game_col = stat_column_map.get(statistic, f'OPP {statistic}/GP')
+        if expected_per_game_col in headers:
+            def_stat_col = headers.index(expected_per_game_col)
+            print(f"Using per-game stats from column {def_stat_col} ({expected_per_game_col})")
+        else:
+            # Fallback to column 3 (which should always be the per-game column)
+            def_stat_col = 3
+            print(f"Using fallback column {def_stat_col} for {statistic}")
         
         # Extract rows
         rows = table.find_all('tr')[1:]  # Skip header row
@@ -122,9 +152,11 @@ def get_team_defense_rankings_single_stat(statistic):
                     team_name = re.sub(r'\s*2024-25.*', '', team_name)  # Remove season
                     team_name = team_name.strip()
                     
-                    # Try to convert value to float, skip if not numeric
+                    # Clean value by removing commas and converting to float
                     try:
-                        float_value = float(value)
+                        # Remove commas and any extra whitespace
+                        clean_value = value.replace(',', '').strip()
+                        float_value = float(clean_value)
                         if team_name and len(team_name) > 2:  # Only add if we have a meaningful team name
                             raw_rankings.append((team_name, float_value))
                     except ValueError:

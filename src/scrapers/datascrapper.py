@@ -81,9 +81,10 @@ def sort_combined_data(nested_list):
 
     return sorted_nested_list
 
-v = "https://www.statmuse.com/nba/ask/steph-curry-stats-in-last-25-regular-season-games"
-t = scrape_statmuse(v)
-
-for i in t:
-    print(i)
+# Test code (commented out for production)
+# v = "https://www.statmuse.com/nba/ask/steph-curry-stats-in-last-25-regular-season-games"
+# t = scrape_statmuse(v)
+# 
+# for i in t:
+#     print(i)
 
