@@ -1,6 +1,8 @@
 # 🏈 Quantitative Bets - Sports Analytics Platform
 
 A comprehensive sports betting analysis platform that combines real-time data scraping, statistical modeling, and interactive dashboards to help make informed sports betting decisions.
+<img width="1840" height="992" alt="image" src="https://github.com/user-attachments/assets/26cb4769-ba9f-4866-9394-83a7db991824" />
+
 
 ## 🎯 **What This Does**
 
